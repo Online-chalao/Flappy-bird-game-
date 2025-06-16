@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Bird</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #70c5ce;
+            font-family: 'Arial', sans-serif;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            background-image: url('https://iili.io/F9YJbuS.png');
+            background-size: cover;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            left: 50px;
+            top: 300px;
+            z-index: 10;
+            display: none;
+        }
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background-image: url('https://iili.io/F9YJmw7.png');
+            background-size: 100% 100%;
+            z-index: 5;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+        }
+
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+        }
+
+        #start-screen h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #level-select {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 80%;
+        }
+
+        #level-select button {
+            padding: 8px;
+            font-size: 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #level-select button:hover {
+            background-color: #45a049;
+            transform: scale(1.03);
+        }
+
+        #level-select button.active {
+            background-color: #ffcc00;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            color: white;
+        }
+
+        #game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        #game-over p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        #pause-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            color: white;
+        }
+
+        #pause-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background-color: #ffcc00;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #ffdb4d;
+            transform: scale(1.05);
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 80%;
+            max-width: 200px;
+        }
+
+        #sound-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            #game-container {
+                height: 100vh;
+                max-width: 100%;
+                border: none;
+            }
+            
+            #bird {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .pipe {
+                width: 50px;
+            }
+            
+            #sound-toggle {
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <button id="sound-toggle">🔊</button>
+        <div id="start-screen">
+            <h1>Flappy Bird</h1>
+            <div id="level-select">
+                <button id="easy-btn" class="active">Easy</button>
+                <button id="medium-btn">Medium</button>
+                <button id="hard-btn">Hard</button>
+            </div>
+            <button id="start-btn">Start Game</button>
+        </div>
+        <img id="bird" src="https://iili.io/F9YJpt9.png" alt="Bird">
+        <div id="score">0</div>
+        <div id="game-over">
+            <h2>Game Over</h2>
+            <p>Score: <span id="final-score">0</span></p>
+            <div class="button-group">
+                <button id="restart-btn">Play Again</button>
+            </div>
+        </div>
+        <div id="pause-screen">
+            <h2>Game Paused</h2>
+            <div class="button-group">
+                <button id="resume-btn">Resume</button>
+                <button id="new-game-btn">New Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bird = document.getElementById('bird');
+            const gameContainer = document.getElementById('game-container');
+            const scoreDisplay = document.getElementById('score');
+            const gameOverDisplay = document.getElementById('game-over');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const startScreen = document.getElementById('start-screen');
+            const startBtn = document.getElementById('start-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const pauseScreen = document.getElementById('pause-screen');
+            const resumeBtn = document.getElementById('resume-btn');
+            const newGameBtn = document.getElementById('new-game-btn');
+            const easyBtn = document.getElementById('easy-btn');
+            const mediumBtn = document.getElementById('medium-btn');
+            const hardBtn = document.getElementById('hard-btn');
+            const soundToggle = document.getElementById('sound-toggle');
+            
+            // Audio elements
+            const jumpSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3');
+            const scoreSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
+            const hitSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3');
+            const backgroundMusic = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-show-suspense-waiting-668.mp3');
+            
+            // Audio settings
+            let soundEnabled = true;
+            backgroundMusic.loop = true;
+            jumpSound.volume = 0.3;
+            scoreSound.volume = 0.3;
+            hitSound.volume = 0.3;
+            backgroundMusic.volume = 0.2;
+            
+            let birdPosition = 300;
+            let birdVelocity = 0;
+            let gravity = 0.4;
+            let jumpForce = -8;
+            let gameRunning = false;
+            let gamePaused = false;
+            let score = 0;
+            let pipes = [];
+            let pipeGap = 150;
+            let pipeFrequency = 1500;
+            let pipeSpeed = 2;
+            let lastPipeTime = 0;
+            let animationFrameId;
+            let gameStarted = false;
+            let currentLevel = 'easy';
+            
+            // Difficulty settings
+            const difficultySettings = {
+                easy: { 
+                    gap: 180, 
+                    frequency: 2000, 
+                    speed: 1.5,
+                    gravity: 0.3,
+                    jumpForce: -7
+                },
+                medium: { 
+                    gap: 150, 
+                    frequency: 1500, 
+                    speed: 2,
+                    gravity: 0.4,
+                    jumpForce: -8
+                },
+                hard: { 
+                    gap: 120, 
+                    frequency: 1000, 
+                    speed: 2.5,
+                    gravity: 0.5,
+                    jumpForce: -9
+                }
+            };
+            
+            // Initialize game
+            function init() {
+                startBtn.addEventListener('click', startGame);
+                restartBtn.addEventListener('click', startGame);
+                resumeBtn.addEventListener('click', resumeGame);
+                newGameBtn.addEventListener('click', startGame);
+                
+                // Level selection
+                easyBtn.addEventListener('click', () => setLevel('easy'));
+                mediumBtn.addEventListener('click', () => setLevel('medium'));
+                hardBtn.addEventListener('click', () => setLevel('hard'));
+                
+                // Sound toggle
+                soundToggle.addEventListener('click', toggleSound);
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' || e.key === 'ArrowUp') {
+                        if (gameRunning && !gamePaused) {
+                            birdVelocity = jumpForce;
+                            playSound(jumpSound);
+                            e.preventDefault();
+                        }
+                    }
+                    
+                    // Pause game with Escape key
+                    if (e.key === 'Escape' && gameStarted) {
+                        if (gameRunning && !gamePaused) {
+                            pauseGame();
+                        } else if (gamePaused) {
+                            resumeGame();
+                        }
+                        e.preventDefault();
+                    }
+                });
+                
+                // Touch controls
+                gameContainer.addEventListener('touchstart', (e) => {
+                    if (gameRunning && !gamePaused) {
+                        birdVelocity = jumpForce;
+                        playSound(jumpSound);
+                        e.preventDefault();
+                    } else if (gamePaused) {
+                        resumeGame();
+                        e.preventDefault();
+                    }
+                });
+                
+                // Click controls (for desktop)
+                gameContainer.addEventListener('click', (e) => {
+                    if (gameRunning && !gamePaused && e.target === gameContainer) {
+                        birdVelocity = jumpForce;
+                        playSound(jumpSound);
+                    }
+                });
+            }
+            
+            // Play sound if enabled
+            function playSound(sound) {
+                if (!soundEnabled) return;
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio play error:", e));
+            }
+            
+            // Toggle sound on/off
+            function toggleSound() {
+                soundEnabled = !soundEnabled;
+                soundToggle.textContent = soundEnabled ? "🔊" : "🔇";
+                
+                if (soundEnabled && gameRunning && !gamePaused) {
+                    backgroundMusic.play().catch(e => console.log("Audio play error:", e));
+                } else {
+                    backgroundMusic.pause();
+                }
+            }
+            
+            // Set difficulty level
+            function setLevel(level) {
+                currentLevel = level;
+                const settings = difficultySettings[level];
+                pipeGap = settings.gap;
+                pipeFrequency = settings.frequency;
+                pipeSpeed = settings.speed;
+                gravity = settings.gravity;
+                jumpForce = settings.jumpForce;
+                
+                // Update active button
+                easyBtn.classList.remove('active');
+                mediumBtn.classList.remove('active');
+                hardBtn.classList.remove('active');
+                document.getElementById(`${level}-btn`).classList.add('active');
+            }
+        
+            // Start game
+            function startGame() {
+                // Apply current level settings
+                const settings = difficultySettings[currentLevel];
+                pipeGap = settings.gap;
+                pipeFrequency = settings.frequency;
+                pipeSpeed = settings.speed;
+                gravity = settings.gravity;
+                jumpForce = settings.jumpForce;
+                
+                // Reset game state
+                birdPosition = gameContainer.clientHeight / 2;
+                birdVelocity = 0;
+                bird.style.top = birdPosition + 'px';
+                bird.style.transform = 'rotate(0deg)';
+                bird.style.display = 'block';
+                
+                // Clear existing pipes
+                pipes.forEach(pipe => {
+                    pipe.element[0].remove();
+                    pipe.element[1].remove();
+                });
+                pipes = [];
+                
+                // Reset score
+                score = 0;
+                scoreDisplay.textContent = score;
+                scoreDisplay.style.display = 'block';
+                
+                // Hide screens
+                startScreen.style.display = 'none';
+                gameOverDisplay.style.display = 'none';
+                pauseScreen.style.display = 'none';
+                
+                // Start background music
+                if (soundEnabled) {
+                    backgroundMusic.currentTime = 0;
+                    backgroundMusic.play().catch(e => console.log("Audio play error:", e));
+                }
+                
+                // Start game loop
+                gameRunning = true;
+                gamePaused = false;
+                gameStarted = true;
+                lastPipeTime = Date.now();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Pause game
+            function pauseGame() {
+                gamePaused = true;
+                pauseScreen.style.display = 'flex';
+                cancelAnimationFrame(animationFrameId);
+                backgroundMusic.pause();
+            }
+            
+            // Resume game
+            function resumeGame() {
+                gamePaused = false;
+                pauseScreen.style.display = 'none';
+                lastPipeTime = Date.now() - (pipeFrequency / 2); // Prevent immediate pipe creation
+                animationFrameId = requestAnimationFrame(gameLoop);
+                if (soundEnabled) {
+                    backgroundMusic.play().catch(e => console.log("Audio play error:", e));
+                }
+            }
+            
+            // Game loop
+            function gameLoop(timestamp) {
+                if (!gameRunning || gamePaused) return;
+                
+                updateBird();
+                updatePipes();
+                checkCollisions();
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+            
+            // Update bird position
+            function updateBird() {
+                birdVelocity += gravity;
+                birdPosition += birdVelocity;
+                bird.style.top = birdPosition + 'px';
+                
+                // Rotate bird based on velocity
+                const rotation = Math.min(Math.max(birdVelocity * 3, -30), 30);
+                bird.style.transform = `rotate(${rotation}deg)`;
+                
+                // Check if bird hits ground or ceiling
+                if (birdPosition > gameContainer.clientHeight - 40 || birdPosition < 0) {
+                    playSound(hitSound);
+                    endGame();
+                }
+            }
+            
+            // Create new pipes
+            function createPipe() {
+                const minHeight = 50;
+                const maxHeight = gameContainer.clientHeight - pipeGap - minHeight;
+                const pipeHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+                
+                const topPipe = document.createElement('div');
+                topPipe.className = 'pipe';
+                topPipe.style.height = pipeHeight + 'px';
+                topPipe.style.top = '0';
+                topPipe.style.left = gameContainer.clientWidth + 'px';
+                gameContainer.appendChild(topPipe);
+                
+                const bottomPipe = document.createElement('div');
+                bottomPipe.className = 'pipe';
+                bottomPipe.style.height = (gameContainer.clientHeight - pipeHeight - pipeGap) + 'px';
+                bottomPipe.style.bottom = '0';
+                bottomPipe.style.left = gameContainer.clientWidth + 'px';
+                gameContainer.appendChild(bottomPipe);
+                
+                pipes.push({
+                    element: [topPipe, bottomPipe],
+                    x: gameContainer.clientWidth,
+                    passed: false
+                });
+            }
+            
+            // Update pipes position
+            function updatePipes() {
+                const currentTime = Date.now();
+                if (currentTime - lastPipeTime > pipeFrequency) {
+                    createPipe();
+                    lastPipeTime = currentTime;
+                }
+                
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    const pipe = pipes[i];
+                    pipe.x -= pipeSpeed;
+                    
+                    pipe.element[0].style.left = pipe.x + 'px';
+                    pipe.element[1].style.left = pipe.x + 'px';
+                    
+                    // Check if bird passed the pipe
+                    if (!pipe.passed && pipe.x < 50 - 60) {
+                        pipe.passed = true;
+                        score++;
+                        scoreDisplay.textContent = score;
+                        playSound(scoreSound);
+                    }
+                    
+                    // Remove pipes that are off screen
+                    if (pipe.x < -60) {
+                        pipe.element[0].remove();
+                        pipe.element[1].remove();
+                        pipes.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Check for collisions
+            function checkCollisions() {
+                const birdRect = bird.getBoundingClientRect();
+                
+                for (const pipe of pipes) {
+                    const topPipeRect = pipe.element[0].getBoundingClientRect();
+                    const bottomPipeRect = pipe.element[1].getBoundingClientRect();
+                    
+                    if (
+                        birdRect.right > topPipeRect.left && 
+                        birdRect.left < topPipeRect.right &&
+                        (birdRect.top < topPipeRect.bottom || birdRect.bottom > bottomPipeRect.top)
+                    ) {
+                        playSound(hitSound);
+                        endGame();
+                        break;
+                    }
+                }
+            }
+            
+            // End the game
+            function endGame() {
+                gameRunning = false;
+                cancelAnimationFrame(animationFrameId);
+                backgroundMusic.pause();
+                
+                finalScoreDisplay.textContent = score;
+                gameOverDisplay.style.display = 'flex';
+            }
+            
+            // Initialize the game
+            init();
+            setLevel('easy'); // Set default level
+        });
+    </script>
+</body>
+</html>
